@@ -1,3 +1,5 @@
+.. contents::
+
 Call Profiler Documentation (the minimalist approach)
 ===========================
 

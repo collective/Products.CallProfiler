@@ -4,7 +4,7 @@ import os
 version = '1.0'
 
 long_description = (
-    open('src/Products/CallProfiler/README.txt').read()
+    open('README.rst').read()
     + '\n' +
     'Contributors\n'
     '============\n'
