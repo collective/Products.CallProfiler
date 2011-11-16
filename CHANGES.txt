@@ -1,8 +1,8 @@
 Changelog
 =========
 
-1.5dev (unreleased)
--------------------
+1.5 (2011-11-16)
+----------------
 
 - Package created using zopeskel with the 1.4-fixed release from plone.org
   [toutpt]
