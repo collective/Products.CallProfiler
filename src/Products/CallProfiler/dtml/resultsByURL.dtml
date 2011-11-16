@@ -1,0 +1,28 @@
+<dtml-var manage_page_header>
+<dtml-var manage_tabs>
+
+<form action="clear"><input type="submit" value="clear"></form>
+
+<table border=1 cellspacing=0 cellpadding=2>
+<tr><th>url</th><th>min</th><th>ave</th><th>max</th><th>transactions</th></tr>
+
+<dtml-in summaryByURL mapping>
+ <tr>
+  <td>&dtml-truncated_url;</td>
+  <td><dtml-var min fmt="%2.4f"></td>
+  <td><dtml-var ave fmt="%2.4f"></td>
+  <td><dtml-var max fmt="%2.4f"></td>
+  <td><dtml-in transactions>
+   <a href="resultsByURL?tid=&dtml-tid;"><dtml-var time_total fmt="%2.4f"></a><dtml-unless sequence-end>,</dtml-unless>
+   </dtml-in>
+  </td>
+ </tr>
+</dtml-in>
+
+</table>
+
+<dtml-if tid><dtml-var "detail(this(), REQUEST, tid=tid)"></dtml-if>
+
+<form action="clear"><input type="submit" value="clear"></form>
+
+<dtml-var manage_page_footer>

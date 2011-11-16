@@ -1,0 +1,24 @@
+TODO
+
+. determine the pecentages for highlighting dynamically
+  - if there's < 5 calls, red is >50%
+  - if there's < 10 calls, red is >20%?
+  - else red is >20%?
+
+. allow sorting of columns in the results
+
+. stuff the results away in the ODB when a request is finished
+
+. allow auto-culling or auto-aggregation of results when it's left on for a
+  long time
+
+
+
+DONE
+
+. clean up the data storage so I can reduce the computation time
+
+. better call graph display
+
+. url lopping when > 100 chars
+

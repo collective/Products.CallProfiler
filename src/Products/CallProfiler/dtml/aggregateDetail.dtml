@@ -1,0 +1,98 @@
+<dtml-var manage_page_header>
+<dtml-call "REQUEST.set('management_view', 'Aggregates')">
+<dtml-var manage_tabs>
+
+
+<dtml-if "validTID(tid)">
+<p>
+<dtml-var colour_key>
+<p>
+Change the display to:
+<dtml-if show_all>
+ <dtml-call "REQUEST.set('span', 3)">
+ <a href="&dtml-URL0;?tid=&dtml-tid;">Show only summary</a>
+<dtml-else>
+ <dtml-call "REQUEST.set('span', 1)">
+ <a href="&dtml-URL0;?tid=&dtml-tid;&amp;show_all=1">Show min/max as well</a>
+</dtml-if>
+
+<dtml-with "aggregateDetailResults(tid)">
+
+ <table border=0 cellspacing=0 cellpadding=2 width="100%">
+
+ <tr><td colspan="<dtml-var "span*3 + 1">"><b>&dtml-url;</b>
+     (total: <dtml-var min_time_total fmt="%.2fs"> /
+		<dtml-var ave_time_total fmt="%.2fs"> /
+		<dtml-var max_time_total fmt="%.2fs">)</td></tr>
+
+ <tr class="list-header">
+  <th colspan="&dtml-span;" class="list-header" width="1%%" align="left">Elapsed</th>
+  <th colspan="&dtml-span;" class="list-header" width="1%%" align="left">Time&nbsp;Spent</th>
+  <th colspan="&dtml-span;" class="list-header" width="1%%" align="left">Percentage</th>
+  <th class="list-header" align="left">Action</th>
+ </tr>
+
+ <dtml-if show_all>
+  <tr class="list-header">
+   <th>min</th><th>ave</th><th>max</th>
+   <th>min</th><th>ave</th><th>max</th>
+   <th>min</th><th>ave</th><th>max</th>
+  </tr>
+ </dtml-if>
+
+ <dtml-in listEvents mapping>
+  <tr class="<dtml-if sequence-odd>row-hilite<dtml-else>row-normal</dtml-if>">
+
+    <dtml-if show_all>
+     <td align="center" class="location-bar">
+      <dtml-if min_time_elapsed>+<dtml-var min_time_elapsed fmt="%2.4f">s
+      <dtml-else>&nbsp;</dtml-if>
+     </td>
+    </dtml-if>
+
+    <td align="center" class="location-bar">
+      <dtml-if ave_time_elapsed>+<dtml-var ave_time_elapsed fmt="%2.4f">s
+      <dtml-else>&nbsp;</dtml-if>
+    </td>
+
+    <dtml-if show_all>
+     <td align="center" class="location-bar">
+      <dtml-if max_time_elapsed>+<dtml-var max_time_elapsed fmt="%2.4f">s
+      <dtml-else>&nbsp;</dtml-if>
+     </td>
+     <td align="center"><dtml-var min_time_display fmt="%2.4f">s</td>
+    </dtml-if>
+
+    <td align="center"><dtml-var time_display fmt="%2.4f">s</td>
+
+    <dtml-if show_all>
+     <td align="center"><dtml-var max_time_total fmt="%2.4f">s</td>
+     <td align="center"><dtml-var min_percentage_display fmt="%2.1f"></td>
+    </dtml-if>
+
+    <td align="center" <dtml-if colour>bgcolor="&dtml-colour;"</dtml-if>>
+     <dtml-var percentage_display fmt="%2.1f%%">
+    </td>
+
+    <dtml-if show_all>
+     <td align="center"><dtml-var max_percentage_display fmt="%2.1f"></td>
+    </dtml-if>
+
+    <td>
+     <dtml-if object><tt>&dtml-treepart;</tt><dtml-if icon><img
+src="&dtml-BASEPATH1;/&dtml-icon;" alt="&dtml-meta_type;"></dtml-if>
+       &dtml-object;
+       &dtml-str_call_count;
+     <dtml-else><tt>&dtml-treepart; |</tt></dtml-if>
+    </td>
+  </tr>
+ </dtml-in>
+
+</dtml-with>
+
+<dtml-else>
+ <font color="red">Invalid session ID: "&dtml-tid;"</font>
+</dtml-if>
+
+<dtml-var manage_page_footer>
+

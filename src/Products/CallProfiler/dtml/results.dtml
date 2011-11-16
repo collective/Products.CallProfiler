@@ -1,0 +1,23 @@
+<dtml-var manage_page_header>
+<dtml-var manage_tabs>
+
+<form action="clear"><input type="submit" value="clear"></form>
+
+<table border=1 cellspacing=0 cellpadding=2>
+<tr><th>time</th><th>total time</th><th>url</th></tr>
+
+<dtml-in summary>
+ <tr>
+  <td><a href="results?tid=&dtml-tid;">&dtml-str_time_start;</a></td>
+  <td><dtml-var time_total fmt="%2.4f"></td>
+  <td>&dtml-url;</td>
+ </tr>
+</dtml-in>
+
+</table>
+
+<dtml-if tid><dtml-var "detail(this(), REQUEST, tid=tid)"></dtml-if>
+
+<form action="clear"><input type="submit" value="clear"></form>
+
+<dtml-var manage_page_footer>

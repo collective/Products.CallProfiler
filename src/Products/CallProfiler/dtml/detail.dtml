@@ -1,0 +1,43 @@
+
+<dtml-if "validTID(tid)">
+<dtml-with "detailResults(tid)">
+ <table border=0 cellspacing=0 cellpadding=2 width="100%">
+
+ <tr>
+  <td colspan=5><b>&dtml-url;</b> (total: <dtml-var time_total fmt="%.2fs">)</td>
+ </tr>
+
+ <tr class="list-header">
+  <th class="list-header" width="1%%" align="left">Elapsed</th>
+  <th class="list-header" width="1%%" align="left">Time&nbsp;Spent</th>
+  <th class="list-header" width="1%%" align="left">Percentage</th>
+  <th class="list-header" align="left">Action</th>
+ </tr>
+
+ <dtml-in listEvents mapping>
+  <tr class="<dtml-if sequence-odd>row-hilite<dtml-else>row-normal</dtml-if>">
+    <td class="location-bar">
+      <dtml-if time_elapsed>+<dtml-var time_elapsed fmt="%2.4f">
+      <dtml-else>&nbsp;</dtml-if>
+    </td>
+    <td align="center">
+     <dtml-var time_display fmt="%2.4f">
+    </td>
+    <td align="center" <dtml-if colour>bgcolor="&dtml-colour;"</dtml-if>>
+     <dtml-var percentage_display fmt="%2.1f%%">
+    </td>
+    <td>
+     <dtml-if object><tt>&dtml-treepart;</tt><dtml-if icon><img src="&dtml-BASEPATH1;/&dtml-icon;" alt="&dtml-meta_type;"></dtml-if>
+	&dtml-object;
+	&dtml-str_call_count;
+     <dtml-else><tt>&dtml-treepart; |</tt></dtml-if>
+    </td>
+  </tr>
+ </dtml-in>
+
+ </table>
+</dtml-with>
+
+<dtml-else>
+ <font color="red">Invalid session ID: "&dtml-tid;"</font>
+</dtml-if>

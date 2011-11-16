@@ -1,0 +1,25 @@
+<dtml-var manage_page_header>
+<dtml-var manage_tabs>
+
+<form action="clear"><input type="submit" value="clear"></form>
+
+<table border=1 cellspacing=0 cellpadding=2>
+<tr><th>url (click for detail)</th><th>matches</th><th>min</th><th>ave</th><th>max</th></tr>
+
+<dtml-in aggregateResults>
+ <dtml-in sequence-item>
+  <tr>
+   <td><a href="aggregateDetail?tid=<dtml-var "tids[0]" html_quote>">&dtml-truncated_url;</a></td>
+   <td>&dtml-num_runs;</td>
+   <td><dtml-var min_time_total fmt="%2.4f"></td>
+   <td><dtml-var ave_time_total fmt="%2.4f"></td>
+   <td><dtml-var max_time_total fmt="%2.4f"></td>
+  </tr>
+ </dtml-in>
+</dtml-in>
+
+</table>
+
+<form action="clear"><input type="submit" value="clear"></form>
+
+<dtml-var manage_page_footer>
