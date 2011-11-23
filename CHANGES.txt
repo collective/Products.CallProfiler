@@ -4,8 +4,8 @@ Changelog
 1.5.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
-
+- Fix initialize on Zope2.13, use bobo_application instead of context._ProductContext__app
+  [toutpt]
 
 1.5 (2011-11-16)
 ----------------

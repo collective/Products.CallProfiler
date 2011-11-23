@@ -29,9 +29,16 @@ from Acquisition import aq_base
 from App.ImageFile import ImageFile
 
 import CallProfiler
+try:
+    from Zope2 import bobo_application
+except ImportError:
+    bobo_application = None
 
 def installControlPanel(context, panelClass):
-    app = context._ProductContext__app
+    if bobo_application is not None:
+        app = bobo_application()
+    else:
+        app = context._ProductContext__app
     cp = app.Control_Panel
     id = panelClass.id
     if 0: # Enable to clean up the control panel.
