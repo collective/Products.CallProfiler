@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.5.1 (unreleased)
+1.5.1 (2011-11-23)
 ------------------
 
 - Fix initialize on Zope2.13, use bobo_application instead of context._ProductContext__app
