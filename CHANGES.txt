@@ -4,8 +4,8 @@ Changelog
 1.5.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
-
+- really fix initialize on Zope2.13. Note: it only happens with released package
+  [toutpt]
 
 1.5.1 (2011-11-23)
 ------------------

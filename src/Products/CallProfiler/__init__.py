@@ -29,12 +29,12 @@ from Acquisition import aq_base
 from App.ImageFile import ImageFile
 
 import CallProfiler
-try:
-    from Zope2 import bobo_application
-except ImportError:
-    bobo_application = None
 
 def installControlPanel(context, panelClass):
+    try:
+        from Zope2 import bobo_application
+    except ImportError:
+        bobo_application = None
     if bobo_application is not None:
         app = bobo_application()
     else:
