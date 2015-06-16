@@ -1,6 +1,6 @@
+import test_profiler
 import unittest
 
-import test_profiler
 
 def go():
     suite = unittest.TestSuite((
@@ -9,4 +9,3 @@ def go():
     runner = unittest.TextTestRunner()
     result = runner.run(suite)
     return result.wasSuccessful()
-

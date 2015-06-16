@@ -4,6 +4,9 @@ Changelog
 1.5.2 (unreleased)
 ------------------
 
+- PEP8.
+  [thet]
+
 - really fix initialize on Zope2.13. Note: it only happens with released package
   [toutpt]
 

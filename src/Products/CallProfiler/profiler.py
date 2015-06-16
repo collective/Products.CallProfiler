@@ -1,15 +1,15 @@
 # Copyright (c) 2002 ekit.com Inc (http://www.ekit-inc.com/)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 #   The above copyright notice and this permission notice shall be included in
 #   all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,13 @@
 
 # $Id: profiler.py,v 1.4 2002/02/08 00:06:33 rjones Exp $
 
-import time, operator
+import time
+import operator
 from thread import get_ident
 
+
 class Profiler:
+
     def __init__(self):
         self.reset()
 
@@ -35,7 +38,7 @@ class Profiler:
         self.transaction = {}   # holds the full transaction info by TID
 
     def hasTID(self, tid):
-        return self.transaction.has_key(tid)
+        return tid in self.transaction
 
     def startRequest(self, request):
         '''Register the start of a request (called by the Publisher)
@@ -43,18 +46,21 @@ class Profiler:
            The StartDict entry will be transferred to the TimingDict once
            we have a valid timing mark (so it's a request we care about).
         '''
-        tid = '%s:%s'%(time.time(), id(request))
+        tid = '%s:%s' % (time.time(), id(request))
         self.thread[get_ident()] = tid
-        self.transaction[tid] = Transaction(tid, request.URL+request.PATH_INFO)
+        self.transaction[tid] = Transaction(
+            tid, request.URL + request.PATH_INFO)
 
     def endRequest(self):
         '''End-of-publishing mark
 
             Mark the current transaction as finished.
         '''
-        if not self.thread.has_key(get_ident()): return
+        if get_ident() not in self.thread:
+            return
         tid = self.thread[get_ident()]
-        if not self.transaction.has_key(tid): return
+        if tid not in self.transaction:
+            return
         transaction = self.transaction[tid]
         if not transaction.events:
             del self.transaction[tid]
@@ -112,8 +118,10 @@ class Profiler:
 
         # now try to add in other entries for the same URL
         for otid, other in self.transaction.items():
-            if not other.time_end: continue
-            if tid == otid: continue
+            if not other.time_end:
+                continue
+            if tid == otid:
+                continue
             if aggregate.matches(other):
                 aggregate.add(tid, other)
         aggregate.calculate()
@@ -130,6 +138,7 @@ class Profiler:
             return l
         if rsort is not None:
             sort = rsort
+
         def sortfun(a, b, sort=sort):
             return cmp(a[sort], b[sort])
         l.sort()
@@ -139,7 +148,9 @@ class Profiler:
 
 profiler = Profiler()
 
+
 class Transaction:
+
     '''Collect events for a particular transaction.
 
         There's two types of events:
@@ -156,6 +167,7 @@ class Transaction:
          processing events:
           time_total
     '''
+
     def __init__(self, tid, url, time_start=None):
         self.tid = tid
         self.url = url
@@ -169,9 +181,11 @@ class Transaction:
     def __getitem__(self, name):
         '''Make this object look like one of the event info dicts
         '''
-        if name == 'time_start': return self.time_start
-        if name == 'events': return self.events
-        raise KeyError, name
+        if name == 'time_start':
+            return self.time_start
+        if name == 'events':
+            return self.events
+        raise KeyError(name)
 
     def __setitem__(self, name, value):
         '''Make this object look like one of the event info dicts
@@ -181,7 +195,7 @@ class Transaction:
         elif name == 'percentage_processing':
             self.percentage_processing = value
         else:
-            raise KeyError, name
+            raise KeyError(name)
 
     def startCall(self, meta_type, object, time_start=None):
         '''Register a call
@@ -202,8 +216,8 @@ class Transaction:
 
         # now insert the call
         info = {'meta_type': meta_type, 'object': object,
-            'time_start': time_start,
-            'time_elapsed': time_start - self.time_start, 'events': []}
+                'time_start': time_start,
+                'time_elapsed': time_start - self.time_start, 'events': []}
         parent['events'].append(info)
         self.stack.append(info)
 
@@ -228,57 +242,58 @@ class Transaction:
             time_end = time.time()
         self.time_end = time_end
         self.time_total = self.time_end - self.time_start
-	self.num_calls = {}
+        self.num_calls = {}
         self.calculate_totals(self)
         if len(self.url) < 100:
             self.truncated_url = self.url
         else:
             self.truncated_url = self.url[:50] + '...' + self.url[-50:]
         self.str_time_start = time.strftime('%Y-%m-%d %H:%M:%S',
-            time.localtime(self.time_start))
+                                            time.localtime(self.time_start))
 
     def calculate_totals(self, call):
         '''Figure the totals and percentages
         '''
         processing = 0
         for event in call['events']:
-            if event.has_key('meta_type'):
-		key = (event['meta_type'], event['object'])
-		count = self.num_calls.get(key, 0) + 1
-		self.num_calls[key] = count
-		event['call_count'] = count
-		if count == 1:
-		    event['str_call_count'] = ''
-		elif count%10 == 1:
-		    event['str_call_count'] = '(%dst call)'%count
-		elif count%10 == 2:
-		    event['str_call_count'] = '(%dnd call)'%count
-		elif count%10 == 3:
-		    event['str_call_count'] = '(%drd call)'%count
-		else:
-		    event['str_call_count'] = '(%dth call)'%count
+            if 'meta_type' in event:
+                key = (event['meta_type'], event['object'])
+                count = self.num_calls.get(key, 0) + 1
+                self.num_calls[key] = count
+                event['call_count'] = count
+                if count == 1:
+                    event['str_call_count'] = ''
+                elif count % 10 == 1:
+                    event['str_call_count'] = '(%dst call)' % count
+                elif count % 10 == 2:
+                    event['str_call_count'] = '(%dnd call)' % count
+                elif count % 10 == 3:
+                    event['str_call_count'] = '(%drd call)' % count
+                else:
+                    event['str_call_count'] = '(%dth call)' % count
                 self.calculate_totals(event)
             else:
                 processing += event['time_total']
-            event['percentage'] = event['time_total']*100 / self.time_total
+            event['percentage'] = event['time_total'] * 100 / self.time_total
         call['time_processing'] = processing
-        call['percentage_processing'] = processing*100 / self.time_total
+        call['percentage_processing'] = processing * 100 / self.time_total
 
     def __str__(self):
         return '''URL: %s
 Start time: %s
 Total time: %s
-'''%(self.url, self.time_start, self.time_total)
+''' % (self.url, self.time_start, self.time_total)
 
     def listEvents(self, call=None, depth=0):
         '''Flatten the events list
         '''
-        if call is None: call = self
+        if call is None:
+            call = self
         l = []
         for event in call['events']:
-            if event.has_key('events'):
+            if 'events' in event:
                 l.append((depth, event))
-                l = l + self.listEvents(event, depth+1)
+                l = l + self.listEvents(event, depth + 1)
             elif event['percentage'] > .5:
                 l.append((depth, event))
         return l
@@ -288,23 +303,25 @@ Total time: %s
         '''
         l = []
         for depth, event in self.listEvents():
-            perc = '%2d%%'%event['percentage']
-            if event.has_key('events'):
-                if event['events'] and event.has_key('time_processing'):
-                    cperc = '%2d%%'%event['percentage_processing']
-                    proc = '(%-3s %-5s)'%(event['time_processing'], cperc)
+            perc = '%2d%%' % event['percentage']
+            if 'events' in event:
+                if event['events'] and 'time_processing' in event:
+                    cperc = '%2d%%' % event['percentage_processing']
+                    proc = '(%-3s %-5s)' % (event['time_processing'], cperc)
                 else:
                     proc = ''
-                l.append('%-4s %-2s %-12s %-3s %-5s %s'%(
-                    '.'*depth, event['time_elapsed'], event['object'],
+                l.append('%-4s %-2s %-12s %-3s %-5s %s' % (
+                    '.' * depth, event['time_elapsed'], event['object'],
                     event['time_total'], perc, proc))
             else:
-                l.append('%-4s     %-12s %-3s %-5s'%(
-                    '.'*depth, '(processing)', event['time_total'], perc))
+                l.append('%-4s     %-12s %-3s %-5s' % (
+                    '.' * depth, '(processing)', event['time_total'], perc))
 
         return '\n'.join(l)
 
+
 class Aggregate:
+
     def __init__(self, tid, transaction):
         self.url = transaction.url
         self.truncated_url = transaction.truncated_url
@@ -323,20 +340,22 @@ class Aggregate:
         for info in events:
             info = info.copy()
             new.append(info)
-            if info.has_key('time_elapsed'):
+            if 'time_elapsed' in info:
                 info['min_time_elapsed'] = info['time_elapsed']
                 info['max_time_elapsed'] = info['time_elapsed']
-            if info.has_key('time_total'):
+            if 'time_total' in info:
                 info['min_time_total'] = info['time_total']
                 info['max_time_total'] = info['time_total']
                 info['min_percentage'] = info['percentage']
                 info['max_percentage'] = info['percentage']
-            if info.has_key('time_processing'):
+            if 'time_processing' in info:
                 info['min_time_processing'] = info['time_processing']
                 info['max_time_processing'] = info['time_processing']
-                info['min_percentage_processing'] =info['percentage_processing']
-                info['max_percentage_processing'] =info['percentage_processing']
-            if info.has_key('events'):
+                info['min_percentage_processing'] = info[
+                    'percentage_processing']
+                info['max_percentage_processing'] = info[
+                    'percentage_processing']
+            if 'events' in info:
                 info['events'] = self.copyEvents(info['events'])
         return new
 
@@ -353,32 +372,32 @@ class Aggregate:
         '''Incorporate the events from a_events to b_events
         '''
         for a, b in zip(a_events, b_events):
-            if a.has_key('time_elapsed'):
+            if 'time_elapsed' in a:
                 a['time_elapsed'] += b['time_elapsed']
                 a['min_time_elapsed'] = min(a['min_time_elapsed'],
-                    b['time_elapsed'])
+                                            b['time_elapsed'])
                 a['max_time_elapsed'] = max(a['max_time_elapsed'],
-                    b['time_elapsed'])
-            if a.has_key('time_total'):
+                                            b['time_elapsed'])
+            if 'time_total' in a:
                 a['time_total'] += b['time_total']
                 a['min_time_total'] = min(a['min_time_total'], b['time_total'])
                 a['max_time_total'] = max(a['max_time_total'], b['time_total'])
                 a['percentage'] += b['percentage']
                 a['min_percentage'] = min(a['min_percentage'], b['percentage'])
                 a['max_percentage'] = max(a['max_percentage'], b['percentage'])
-            if a.has_key('time_processing'):
+            if 'time_processing' in a:
                 a['time_processing'] += b['time_processing']
                 a['min_time_processing'] = min(a['min_time_processing'],
-                    b['time_processing'])
+                                               b['time_processing'])
                 a['max_time_processing'] = max(a['max_time_processing'],
-                    b['time_processing'])
+                                               b['time_processing'])
                 a['percentage_processing'] += b['percentage_processing']
                 a['min_percentage_processing'] = min(
                     a['min_percentage_processing'], b['percentage_processing'])
                 a['max_percentage_processing'] = max(
                     a['max_percentage_processing'], b['percentage_processing'])
             # recurse
-            if a.has_key('events'):
+            if 'events' in a:
                 self.addEvents(a['events'], b['events'])
 
     def matches(self, transaction):
@@ -394,8 +413,8 @@ class Aggregate:
         if len(a_events) != len(b_events):
             return 0
         for a, b in zip(a_events, b_events):
-            if a.has_key('events'):
-                if not b.has_key('events'):
+            if 'events' in a:
+                if 'events' not in b:
                     return 0
                 if a['meta_type'] != b['meta_type']:
                     return 0
@@ -408,7 +427,8 @@ class Aggregate:
         '''Pass through the events and figure the summaries
         '''
         self.min_time_total = min(self.time_totals)
-        self.ave_time_total = reduce(operator.add, self.time_totals)/self.num_runs
+        self.ave_time_total = reduce(
+            operator.add, self.time_totals) / self.num_runs
         self.max_time_total = max(self.time_totals)
         self.calcAverages(self.events)
 
@@ -417,27 +437,28 @@ class Aggregate:
         '''
         n = self.num_runs
         for info in events:
-            if info.has_key('time_elapsed'):
+            if 'time_elapsed' in info:
                 info['ave_time_elapsed'] = info['time_elapsed'] / n
-            if info.has_key('time_total'):
+            if 'time_total' in info:
                 info['ave_time_total'] = info['time_total'] / n
                 info['ave_percentage'] = info['percentage'] / n
-            if info.has_key('time_processing'):
+            if 'time_processing' in info:
                 info['ave_time_processing'] = info['time_processing'] / n
                 info['ave_percentage_processing'] = \
                     info['percentage_processing'] / n
-            if info.has_key('events'):
+            if 'events' in info:
                 self.calcAverages(info['events'])
 
     def listEvents(self, call=None, depth=0):
         '''Flatten the events list
         '''
-        if call is None: call = self
+        if call is None:
+            call = self
         l = []
         for event in call['events']:
-            if event.has_key('events'):
+            if 'events' in event:
                 l.append((depth, event))
-                l = l + self.listEvents(event, depth+1)
+                l = l + self.listEvents(event, depth + 1)
             elif event['ave_percentage'] > .5:
                 l.append((depth, event))
         return l
@@ -447,19 +468,20 @@ class Aggregate:
         '''
         l = []
         for depth, event in self.listEvents():
-            perc = '%2.2f%%'%event['ave_percentage']
-            if event.has_key('events'):
-                if event['events'] and event.has_key('ave_time_processing'):
-                    cperc = '%2d%%'%event['ave_percentage_processing']
-                    proc = '(%-3s %-5s)'%(event['ave_time_processing'], cperc)
+            perc = '%2.2f%%' % event['ave_percentage']
+            if 'events' in event:
+                if event['events'] and 'ave_time_processing' in event:
+                    cperc = '%2d%%' % event['ave_percentage_processing']
+                    proc = '(%-3s %-5s)' % (
+                        event['ave_time_processing'], cperc)
                 else:
                     proc = ''
-                l.append('%-4s %-2s %-12s %-3s %-5s %s'%(
-                    '.'*depth, event['ave_time_elapsed'], event['object'],
+                l.append('%-4s %-2s %-12s %-3s %-5s %s' % (
+                    '.' * depth, event['ave_time_elapsed'], event['object'],
                     event['ave_time_total'], perc, proc))
             else:
-                l.append('%-4s     %-12s %-3s %-5s'%(
-                    '.'*depth, '(processing)', event['ave_time_total'],
+                l.append('%-4s     %-12s %-3s %-5s' % (
+                    '.' * depth, '(processing)', event['ave_time_total'],
                     perc))
 
         return '\n'.join(l)
@@ -467,8 +489,9 @@ class Aggregate:
     def __getitem__(self, name):
         '''Make this object look like one of the event info dicts
         '''
-        if name == 'events': return self.events
-        raise KeyError, name
+        if name == 'events':
+            return self.events
+        raise KeyError(name)
 #
 # $Log: profiler.py,v $
 # Revision 1.4  2002/02/08 00:06:33  rjones

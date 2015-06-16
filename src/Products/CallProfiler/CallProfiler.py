@@ -1,15 +1,15 @@
 # Copyright (c) 2002 ekit.com Inc (http://www.ekit-inc.com/)
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 #   The above copyright notice and this permission notice shall be included in
 #   all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,12 +29,9 @@ from AccessControl import ClassSecurityInfo
 from AccessControl import ModuleSecurityInfo
 modulesecurity = ModuleSecurityInfo()
 
-import cStringIO
-import time, operator
-from thread import get_ident
-
 # get the profiler store
 from profiler import profiler
+
 
 def profiler_call_hook(self, *args, **kw):
     '''A call hook
@@ -47,13 +44,14 @@ def profiler_call_hook(self, *args, **kw):
     finally:
         profiler.endCall()
 
+
 def profiler_publish_hook(request, *args, **kw):
     '''Publisher hook
     '''
     profiler.startRequest(request)
     import ZPublisher.Publish
     try:
-        return ZPublisher.Publish.profiler_publish_original(request, *args, **kw)
+        return ZPublisher.Publish.profiler_publish_original(request, *args, **kw)  # noqa
     finally:
         # if we die here, we want to catch it or the publisher will get
         # confused...
@@ -66,7 +64,9 @@ def profiler_publish_hook(request, *args, **kw):
             LOG('CallProfiler.publish_hook', ERROR,
                 'Error during endmark()', error=sys.exc_info())
 
+
 class Profileable:
+
     def __init__(self, module, klass, method):
         self.module = module
         self.method = method
@@ -115,47 +115,47 @@ class Profileable:
             s = 'CHECKED'
         else:
             s = ''
-        return '<input name="enabled:list" type="checkbox" value="%s"%s>%s'%(
+        return '<input name="enabled:list" type="checkbox" value="%s"%s>%s' % (
             self.name, s, self.name)
 
 profileable_modules = {
     'Page Template': Profileable('Products.PageTemplates.PageTemplates',
-        'PageTemplates', '__call__'),
+                                 'PageTemplates', '__call__'),
     'DTML Method': Profileable('OFS.DTMLMethod', 'DTMLMethod', '__call__'),
     'MLDTMLMethod': Profileable('Products.MLDTML.MLDTML',
-        'MLDTMLMethod', '__call__'),
+                                'MLDTMLMethod', '__call__'),
     'Z SQL Method': Profileable('Products.ZSQLMethods.SQL', 'SQL', '__call__'),
     'Python Method': Profileable('Products.PythonMethod.PythonMethod',
-        'PythonMethod', '__call__'),
+                                 'PythonMethod', '__call__'),
     'Script (Python)': Profileable('Products.PythonScripts.PythonScript',
-        'PythonScript', '_exec'),
+                                   'PythonScript', '_exec'),
     'Filesystem Script (Python)':
         Profileable('Products.CMFCore.FSPythonScript', 'FSPythonScript',
-            '__call__'),
+                    '__call__'),
     'Filesystem DTML Method':
         Profileable('Products.CMFCore.FSDTMLMethod', 'FSDTMLMethod',
-            '__call__'),
+                    '__call__'),
     'Filesystem Page Template':
         Profileable('Products.CMFCore.FSPageTemplate', 'FSPageTemplate',
-            '__call__'),
+                    '__call__'),
 }
-        
 
 
 class CallProfiler(Item, Implicit, Persistent):
+
     '''An instance of this class provides an interface between Zope and
        roundup for one roundup instance
     '''
     id = 'CallProfiler'
-    title = meta_type =  'Call Profiler'
+    title = meta_type = 'Call Profiler'
     security = ClassSecurityInfo()
 
     # define the tabs for the management interface
     manage_options = (
-        {'label': 'Configure', 'action':'configureForm'},
-        {'label': 'Results', 'action':'results'},
-        {'label': 'Results by URL', 'action':'resultsByURL'},
-        {'label': 'Aggregates', 'action':'aggregates'},
+        {'label': 'Configure', 'action': 'configureForm'},
+        {'label': 'Results', 'action': 'results'},
+        {'label': 'Results by URL', 'action': 'resultsByURL'},
+        {'label': 'Aggregates', 'action': 'aggregates'},
     ) + Item.manage_options
 
     #
@@ -170,7 +170,7 @@ class CallProfiler(Item, Implicit, Persistent):
     aggregateDetail = HTMLFile('dtml/aggregateDetail', globals())
     resultsByURL = HTMLFile('dtml/resultsByURL', globals())
     security.declareProtected('View management screens', 'configureForm',
-        'detail', 'results', 'resultsByURL')
+                              'detail', 'results', 'resultsByURL')
 
     security.declareProtected('View management screens', 'getComponentModules')
     def getComponentModules(self):
@@ -220,14 +220,14 @@ class CallProfiler(Item, Implicit, Persistent):
             message = ', '.join(enabled) + ' enabled'
 
         return self.configureForm(self, self.REQUEST,
-            manage_tabs_message=message)
+                                  manage_tabs_message=message)
 
     security.declarePrivate('installPublisherHook')
     def installPublisherHook(self):
         '''Set the ZPublisher hook
         '''
         import ZPublisher.Publish
-        ZPublisher.Publish.profiler_publish_original=ZPublisher.Publish.publish
+        ZPublisher.Publish.profiler_publish_original = ZPublisher.Publish.publish  # noqa
         ZPublisher.Publish.publish = profiler_publish_hook
 
     security.declarePrivate('uninstallPublisherHook')
@@ -235,11 +235,11 @@ class CallProfiler(Item, Implicit, Persistent):
         '''Remove the ZPublisher hook
         '''
         import ZPublisher.Publish
-        ZPublisher.Publish.publish=ZPublisher.Publish.profiler_publish_original
+        ZPublisher.Publish.publish = ZPublisher.Publish.profiler_publish_original  # noqa
         del ZPublisher.Publish.profiler_publish_original
 
     security.declareProtected('View management screens',
-        'isPublisherHookInstalled')
+                              'isPublisherHookInstalled')
     def isPublisherHookInstalled(self):
         '''Detect the presence of the publisher hook
         '''
@@ -256,17 +256,17 @@ class CallProfiler(Item, Implicit, Persistent):
         '''
         profiler.reset()
         return self.configureForm(self, self.REQUEST,
-            manage_tabs_message='cleared')
+                                  manage_tabs_message='cleared')
 
     security.declareProtected('View management screens', 'resultsOverTime')
     def summary(self):
         '''Calculate summary info
         '''
         #sort = self.REQUEST['sort']
-        #if sort:
+        # if sort:
         #    return profiler.listTransactions(sort=sort)
         #rsort = self.REQUEST['rsort']
-        #if rsort:
+        # if rsort:
         #    return profiler.listTransactions(rsort=rsort)
         return profiler.listTransactions(sort='time_start')
 
@@ -281,7 +281,7 @@ class CallProfiler(Item, Implicit, Persistent):
         for transaction in l:
             tt = transaction.time_total
             url = transaction.url
-            if summary.has_key(url):
+            if url in summary:
                 d = summary[url]
                 d['min'] = min(d['min'], tt)
                 d['max'] = max(d['max'], tt)
@@ -291,8 +291,8 @@ class CallProfiler(Item, Implicit, Persistent):
                 d['transactions'].append((tt, transaction))
             else:
                 summary[url] = {'min': tt, 'max': tt, 'tot': tt, 'num': 1,
-                        'ave': tt, 'transactions': [(tt, transaction)],
-                        'truncated_url': transaction.truncated_url}
+                                'ave': tt, 'transactions': [(tt, transaction)],
+                                'truncated_url': transaction.truncated_url}
         summary = summary.items()
         summary.sort()
         return summary
@@ -312,30 +312,34 @@ class CallProfiler(Item, Implicit, Persistent):
         # do the HTML extra bits
         pm = profileable_modules
         for depth, info in transaction.listEvents():
-            if info.has_key('events'):
-                info['treepart'] = '| '*depth + '+-'
-                if info['events'] and info.has_key('time_processing'):
+            if 'events' in info:
+                info['treepart'] = '| ' * depth + '+-'
+                if info['events'] and 'time_processing' in info:
                     percent = info['percentage_processing']
                     time_display = info['time_processing']
                 else:
                     percent = info['percentage']
                     time_display = info['time_total']
             else:
-                info['treepart'] = '| '*depth
+                info['treepart'] = '| ' * depth
                 percent = info['percentage']
                 time_display = info['time_total']
             info['time_display'] = time_display
             info['percentage_display'] = percent
-            info['percentage_int'] = int(percent/2)
+            info['percentage_int'] = int(percent / 2)
             info['icon'] = ''
-            if info.has_key('meta_type'):
+            if 'meta_type' in info:
                 module = pm[info['meta_type']]
                 if module.icon:
                     info['icon'] = module.icon
-            if percent > 10: info['colour'] = '#ffbbbb'
-            elif percent > 5: info['colour'] = '#ffdbb9'
-            elif percent > 3: info['colour'] = '#fff9b9'
-            else: info['colour'] = ''
+            if percent > 10:
+                info['colour'] = '#ffbbbb'
+            elif percent > 5:
+                info['colour'] = '#ffdbb9'
+            elif percent > 3:
+                info['colour'] = '#fff9b9'
+            else:
+                info['colour'] = ''
 
         return transaction
 
@@ -360,7 +364,7 @@ a high percentage of the total time for the request:
         return profiler.aggregateResults()
 
     security.declareProtected('View management screens',
-        'aggregateDetailResults')
+                              'aggregateDetailResults')
     def aggregateDetailResults(self, tid, show_all=0):
         '''Generate table row cells for the given transaction
         '''
@@ -369,9 +373,9 @@ a high percentage of the total time for the request:
         # do the HTML extra bits
         pm = profileable_modules
         for depth, info in agg.listEvents():
-            if info.has_key('events'):
-                info['treepart'] = '| '*depth + '+-'
-                if info['events'] and info.has_key('ave_time_processing'):
+            if 'events' in info:
+                info['treepart'] = '| ' * depth + '+-'
+                if info['events'] and 'ave_time_processing' in info:
                     min_percent = info['min_percentage_processing']
                     percent = info['ave_percentage_processing']
                     max_percent = info['max_percentage_processing']
@@ -386,7 +390,7 @@ a high percentage of the total time for the request:
                     time_display = info['ave_time_total']
                     max_time_display = info['max_time_total']
             else:
-                info['treepart'] = '| '*depth
+                info['treepart'] = '| ' * depth
                 min_percent = info['min_percentage']
                 percent = info['ave_percentage']
                 max_percent = info['max_percentage']
@@ -402,16 +406,20 @@ a high percentage of the total time for the request:
             info['max_percentage_display'] = max_percent
 
             info['icon'] = ''
-            if info.has_key('meta_type'):
+            if 'meta_type' in info:
                 module = pm[info['meta_type']]
                 if module.icon:
                     info['icon'] = module.icon
 
-            info['percentage_int'] = int(percent/2)
-            if percent > 10: info['colour'] = '#ffbbbb'
-            elif percent > 5: info['colour'] = '#ffdbb9'
-            elif percent > 3: info['colour'] = '#fff9b9'
-            else: info['colour'] = ''
+            info['percentage_int'] = int(percent / 2)
+            if percent > 10:
+                info['colour'] = '#ffbbbb'
+            elif percent > 5:
+                info['colour'] = '#ffdbb9'
+            elif percent > 3:
+                info['colour'] = '#fff9b9'
+            else:
+                info['colour'] = ''
 
         return agg
 
