@@ -23,54 +23,40 @@
 
 __version__ = '1.4'
 
+from App.ImageFile import ImageFile
+from CallProfiler import CallProfiler
 import OFS
 import os
-from App.ApplicationManager import ApplicationManager
-from Acquisition import aq_base
-from App.ImageFile import ImageFile
-
-import CallProfiler
 
 
-def installControlPanel(context, panelClass):
+def initialize(context):
+    app = context._ProductContext__app
+    no_product_install = app is None
+    if no_product_install:
+        # must open a secondary ZODB connection to access "Control_Panel"
+        # Note: in general, it is dangerous to access the same ZODB from
+        # different connections in the same transaction (deadlock may occur)
+        # In our special case, our connection should be the only writing one.
+        # If necessary, we could abort an existing transaction.
+        from transaction import commit  # to be used later
+        from Zope2 import app as z_app
+        app = z_app()
     try:
-        from Zope2 import bobo_application
-    except ImportError:
-        bobo_application = None
-    if bobo_application is not None:
-        app = bobo_application()
-    else:
-        app = context._ProductContext__app
-    cp = app.Control_Panel
-    id = panelClass.id
-    if 0:  # Enable to clean up the control panel.
-        try:
-            del cp._objects
-        except:
-            pass
-    cp.id  # Unghostify.
-    if '_objects' in cp.__dict__:
-        # _objects has been overridden.  We have to persist.
-        existing = getattr(aq_base(cp), id, None)
-        if existing is None or existing.__class__ != panelClass:
-            cp._setObject(id, panelClass())
-    else:
-        # Don't persist what we don't have to.
-        objects = ApplicationManager._objects
-        objects = filter(lambda o, id=id: o['id'] != id, objects)
-        ApplicationManager._objects = objects + (
-            {'id': id, 'meta_type': panelClass.meta_type},)
-        try:
-            delattr(cp, id)
-        except:
-            pass
-        setattr(ApplicationManager, id, panelClass())
-    return cp._getOb(id)
-
-_prodname = __name__.split('.')[-1]
+        control_panel = app.Control_Panel
+        id_ = CallProfiler.id
+        CallProfiler.icon = createIcon('www/profiler.gif', globals(), id_)
+        panel = getattr(control_panel, id_, None)
+        if panel is None:
+            panel = CallProfiler()
+            control_panel._setObject(id_, panel)
+            if no_product_install:
+                commit()  # to ensure, `CallProfiler` is installed
+    finally:
+        if no_product_install:
+            app._p_jar.close()
 
 
-def createIcon(iconspec, _prefix, pid=_prodname):
+def createIcon(iconspec, _prefix, pid):
     name = os.path.split(iconspec)[1]
     res = 'misc_/%s/%s' % (pid, name)
     icon = ImageFile(iconspec, _prefix)
@@ -79,8 +65,3 @@ def createIcon(iconspec, _prefix, pid=_prodname):
         setattr(OFS.misc_.misc_, pid, OFS.misc_.Misc_(pid, {}))
     getattr(OFS.misc_.misc_, pid)[name] = icon
     return res
-
-
-def initialize(context):
-    installControlPanel(context, CallProfiler.CallProfiler)
-    CallProfiler.CallProfiler.icon = createIcon('www/profiler.gif', globals())
